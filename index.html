@@ -46,14 +46,10 @@
             
             var sun = new THREE.SpotLight(0xfafafa,1.5,0,-2);
             sun.position.set(40,200,90);
-            
-            var burr = new THREE.SpotLight(0xfff,1.5,0,-2);
-            burr.position.set(100,200,90);
 
             Metrix.scene.add(terrainMesh);
             Metrix.scene.add(new THREE.AmbientLight(0x332F45));
             Metrix.scene.add(sun);
-            Metrix.scene.add(burr);
             
             window.addEventListener("click",function() {
                 if (!mouseLocked) {
