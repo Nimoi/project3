@@ -1,179 +1,96 @@
 <!doctype html>
-<html>
-	<head>
-		<title>Project3</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		
-			
-		<script src="vendor/three.js/Three.js"></script>
-		<script src="vendor/three.js/Detector.js"></script>
-		<!-- https://github.com/mrdoob/stats.js -->
-		<script src="vendor/three.js/Stats.js"></script>
-
-		<script src="vendor/threex/THREEx.screenshot.js"></script>
-		<script src="vendor/threex/THREEx.FullScreen.js"></script>
-		<script src="vendor/threex/THREEx.WindowResize.js"></script>
-		<script src="vendor/threex.dragpancontrols.js"></script>
-
-		<link  href="css/main.css" rel="stylesheet"/>
-	</head>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Project3</title>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+	<script src="js/three.min.js"></script>
+	<script src="js/stats.js"></script>
+	<script src="js/detector.js"></script>
+	<script src="js/RequestAnimationFrame.js"></script>
+	<script src="js/FirstPersonControls.js"></script>
+	<script src="js/ImprovedNoise.js"></script>
+	<script src="js/Metrix0.3.js"></script>
+	<style>
+		body {
+		  margin: 0;
+		  background: #fff;
+		}
+	</style>
+</head>
 <body>
-	<!-- three.js container -->
-    	<div id="container"></div>
-	<!-- info on screen display -->
-	<div id="info">
-		<!-- <div class="top">
-			<a href="http://learningthreejs.com/blog/2011/12/20/boilerplate-for-three-js/" target="_blank">LearningThree.js</a>
-			boiler plate for
-			<a href="https://github.com/mrdoob/three.js/" target="_blank">three.js</a>
-		</div> -->
-		<div class="bottom" id="inlineDoc" >
-			- <i>p</i> for screenshot
-		</div> 
-	</div> 
+	<div id="container">		
+	</div>
+	<script>
+		var mouseLocked = false;
+        
+        var user,fpsControls;
+        var terrainMap,terrainMesh;
+        
+        Metrix.WorldOptions.Gravity = 3;
+        
+        window.onload = function() {
+            Metrix.Initialize();
+        };
+        
+        Metrix.OnLoad = function() {
+            Metrix.camera.position.set(0,10,0);
+            user = new Metrix.Object(Metrix.camera,{velocity: true, slope: {start: 0.3}, collisions: true, gravity: true, mass: 20, drag: 2, bounds: {aabb: new Metrix.AABB(null,new THREE.Vector3(5,10,5),0,-1,0)}});//Create Metrix.Object to control velocity, collisions and gravity of the player
+            user.AddUpdateCallback(userUpdate);
+            fpsControls = new Metrix.FirstPersonController(Metrix.camera,1,1);//Add a first person controller to control yaw, pitch and look sensitivity
+            
+            terrainMap = new Metrix.HeightMap(new THREE.Vector3(0,0,0),6,Utils.GenerateHeightMap(1,200,-50,40,40,true));//Create a new height map thats randomly generated using Metrix.js's Utils.GenerateHeightMap(maxRandomClimb,maxHeight,minHeight,smooth,smoothingAmount)
+            terrainMesh = terrainMap.GenerateMesh(new THREE.MeshPhongMaterial({color: 0x2A8782, specular: 0x332F45, shininess: 20, ambient: 0x015770}));//Generate a THREE.Mesh from the height map
+            
+            Metrix.AddHeightMap(terrainMap);//Add the terrain to the metrix world
+            
+            var sun = new THREE.SpotLight(0xfafafa,1.5,0,-2);
+            sun.position.set(40,200,90);
+            
+            var burr = new THREE.SpotLight(0xfff,1.5,0,-2);
+            burr.position.set(100,200,90);
 
-	<script type="text/javascript">
-		var stats, scene, renderer;
-		var camera, cameraControls;
-
-
-		if( !init() )	animate();
-
-		// init the scene
-		function init(){
-
-			if( Detector.webgl ){
-				renderer = new THREE.WebGLRenderer({
-					antialias: true,	// to get smoother output
-					preserveDrawingBuffer: true	// to allow screenshot
-				});
-				renderer.setClearColorHex( 0xBBBBBB, 1 );
-			// uncomment if webgl is required
-			//}else{
-			//	Detector.addGetWebGLMessage();
-			//	return true;
-			}else{
-				renderer	= new THREE.CanvasRenderer();
-			}
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.getElementById('container').appendChild(renderer.domElement);
-
-			// add Stats.js - https://github.com/mrdoob/stats.js
-			stats = new Stats();
-			stats.domElement.style.position	= 'absolute';
-			stats.domElement.style.bottom	= '0px';
-			document.body.appendChild( stats.domElement );
-
-			// create a scene
-			scene = new THREE.Scene();
-
-			// put a camera in the scene
-			camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 1, 10000 );
-			camera.position.set(0, 0, 5);
-			scene.add(camera);
-
-			// create a camera contol
-			cameraControls	= new THREEx.DragPanControls(camera)
-
-			// transparently support window resize
-			THREEx.WindowResize.bind(renderer, camera);
-			// allow 'p' to make screenshot
-			THREEx.Screenshot.bindKey(renderer);
-			// allow 'f' to go fullscreen where this feature is supported
-			if( THREEx.FullScreen.available() ){
-				THREEx.FullScreen.bindKey();		
-				document.getElementById('inlineDoc').innerHTML	+= "- <i>f</i> for fullscreen";
-			}
-
-			// here you add your objects
-			// - you will most likely replace this part by your own
-			var geometry	= new THREE.TorusGeometry( 1, 0.42 );
-			var material	= new THREE.MeshNormalMaterial();
-			var mesh	= new THREE.Mesh( geometry, material );
-			scene.add( mesh );
-		}
-
-    var world = tQuery.createWorld().boilerplate({cameraControls: false}).start();
-
-    world.tCamera().position.set( 70, 40, 70 );
-    world.tCamera().lookAt( world.tScene().position );
-
-    world.tRenderer().shadowMapEnabled = true;
-    world.tRenderer().shadowMapSoft = true;
-    world.tRenderer().setClearColorHex( 0xffffff, 1 );
-
-    world.enablePhysics();
-
-    tQuery.createDirectionalLight().addTo(world)
-    .position(20, 40, -15).color(0xffffff)
-    .castShadow(true).shadowMap(512*2,512*2)
-    .shadowCamera(60, -60, 60, -60, 20, 200)
-    .shadowDarkness(0.7).shadowBias(.002);
-
-    var texture = THREE.ImageUtils.loadTexture( "images/rocks.jpg" );
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set( 3, 3 );
-
-    var ground = tQuery.createCube(100, 1, 100).addTo(world)
-    .position(0, -10, 0)
-    .setLambertMaterial().map(texture).back()
-    .receiveShadow(true);
-
-    ground.enablePhysics({
-      mass: 0
-    });
-
-    var cTexture = THREE.ImageUtils.loadTexture( "images/plywood.jpg" );
-
-    var spawnObject = function() {
-      var object = tQuery.createCube(4,4,4).addTo(world)
-        .rotation(Math.random()*Math.PI*2, Math.random()*Math.PI*2, Math.random()*Math.PI*2)
-        .position(Math.random()*15-7.5, 25, Math.random()*15-7.5)
-        .setLambertMaterial().map(cTexture).back()
-        .castShadow(true);
-
-      object.enablePhysics({
-        friction: 0.4,
-        restitution: 0.6
-      });
-
-      var nCollisions = 0;
-      object.physics().addEventListener('collision', function() {
-          var colliColors = [0xcc8855, 0xbb9955, 0xaaaa55, 0x99bb55, 0x88cc55, 0x77dd55];
-          if( ++nCollisions < colliColors.length ){
-              var color = colliColors[nCollisions];
-              object.get(0).material.color.setHex( color );
-          }
-      });
-    }
-
-    setInterval(spawnObject, 1000);
-
-		// animation loop
-		function animate() {
-
-			// loop on request animation loop
-			// - it has to be at the begining of the function
-			// - see details at http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
-			requestAnimationFrame( animate );
-
-			// do the render
-			render();
-
-			// update stats
-			stats.update();
-		}
-
-		// render the scene
-		function render() {
-
-			// update camera controls
-			cameraControls.update();
-
-			// actually render the scene
-			renderer.render( scene, camera );
-		}
+            Metrix.scene.add(terrainMesh);
+            Metrix.scene.add(new THREE.AmbientLight(0x332F45));
+            Metrix.scene.add(sun);
+            Metrix.scene.add(burr);
+            
+            window.addEventListener("click",function() {
+                if (!mouseLocked) {
+                    Metrix.LockMouse(mouseMove,mouseExit);//If mouse isnt locked and mouse clicked, lock mouse
+                    Metrix.AddObject(user);//Unpause be adding user back to the metrix world
+                }
+                mouseLocked = true;
+            });
+            
+            Metrix.Go();//Start Metrix.js game loop
+        };
+        
+        function userUpdate() {
+            if (Metrix.Key[KEY_W]) {//If W key down, move forward
+                user.MoveForward(1);
+            }
+            if (Metrix.Key[KEY_D]) {//If D key down, move right
+                user.MoveRight(1);
+            }
+            if (Metrix.Key[KEY_S]) {//If S key down, move backward
+                user.MoveForward(-1);
+            }
+            if (Metrix.Key[KEY_A]) {//If A key down, move left
+                user.MoveRight(-1);
+            }
+            if (Metrix.Key[KEY_SPACE] && user.Grounded()) {//If SPACE key down and user is on ground, jump
+                user.velocity.y = 35;
+            }
+        }
+        
+        function mouseMove(mX,mY) {
+            fpsControls.Look(-mX,-mY);//Look around, mX = mouse movement x, mY = mouse movement y
+        }
+        function mouseExit() {
+            mouseLocked = false;
+            Metrix.RemoveObject(user);//Remove user to pause the game once mouse lock is cancelled
+        }
 	</script>
 </body>
 </html>
