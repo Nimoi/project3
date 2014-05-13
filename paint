@@ -1,0 +1,7 @@
+paints = [];
+Canvas paint toy.
+Save color schemes. Gallery with featured artwork.
+Color scheme -> ajax -> php -> return/save top images
+
+Shade scale for colors - complementary/tertiary scales (Need color math).
+Selectable 
