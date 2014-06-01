@@ -130,11 +130,12 @@ function initCannon(){
 
     // Create a slippery material (friction coefficient = 0.0)
     physicsMaterial = new CANNON.Material("slipperyMaterial");
-    var physicsContactMaterial = new CANNON.ContactMaterial(physicsMaterial,
-                                                            physicsMaterial,
-                                                            0.0, // friction coefficient
-                                                            0.3  // restitution
-                                                            );
+    var physicsContactMaterial = new CANNON.ContactMaterial(
+        physicsMaterial,
+        physicsMaterial,
+        0.0, // friction coefficient
+        0.3  // restitution
+    );
     // We must add the contact materials to the world
     world.addContactMaterial(physicsContactMaterial);
 
@@ -213,6 +214,49 @@ function init() {
 
     window.addEventListener( 'resize', onWindowResize, false );
 
+    // Add walls
+
+    // wall materials
+    var cubeTexture = THREE.ImageUtils.loadTexture('img/brick1.jpg');
+    var cubeMaterial = new THREE.MeshLambertMaterial({ map: cubeTexture });
+
+    for(var i=0; i<4; i++){
+        if(i==0) {
+            var halfExtents = new CANNON.Vec3(2,4,20);
+            var x = 14;
+            var y = 4;
+            var z = 0;
+        } else if(i==1) {
+            var halfExtents = new CANNON.Vec3(20,4,2);
+            var x = -8;
+            var y = 4;
+            var z = -22;
+        } else if(i==2) {
+            var halfExtents = new CANNON.Vec3(2,4,20);
+            var x = -30;
+            var y = 4;
+            var z = 0;
+        } else if(i==3) {
+            var halfExtents = new CANNON.Vec3(20,4,2);
+            var x = -8;
+            var y = 4;
+            var z = 22;
+        }
+        var boxShape = new CANNON.Box(halfExtents);
+        var boxGeometry = new THREE.CubeGeometry(halfExtents.x*2,halfExtents.y*2,halfExtents.z*2);
+        var boxBody = new CANNON.RigidBody(0,boxShape);
+        var boxMesh = new THREE.Mesh( boxGeometry, cubeMaterial );
+        world.add(boxBody);
+        scene.add(boxMesh);
+        boxBody.position.set(x,y,z);
+        boxMesh.position.set(x,y,z);
+        boxMesh.castShadow = true;
+        boxMesh.receiveShadow = true;
+        boxMesh.useQuaternion = true;
+        boxes.push(boxBody);
+        boxMeshes.push(boxMesh);
+    }
+
     // Box materials
     var cubeTexture = THREE.ImageUtils.loadTexture('img/metal1.jpg');
     var cubeMaterial = new THREE.MeshLambertMaterial({ map: cubeTexture });
@@ -240,38 +284,38 @@ function init() {
     }
 
     // Add linked boxes
-    var size = 0.5;
-    var he = new CANNON.Vec3(size,size,size*0.1);
-    var boxShape = new CANNON.Box(he);
-    var mass = 0;
-    var space = 0.1*size;
-    var N=5, last;
-    var boxGeometry = new THREE.CubeGeometry(he.x*2,he.y*2,he.z*2);
-    for(var i=0; i<N; i++){
-        var boxbody = new CANNON.RigidBody(mass,boxShape);
-        var boxMesh = new THREE.Mesh( boxGeometry, material );
-        boxbody.position.set(5,(N-i)*(size*2+2*space) + size*2+space,0);
-        boxbody.linearDamping=0.01;
-        boxbody.angularDamping=0.01;
-        boxMesh.useQuaternion = true;
-        boxMesh.castShadow = true;
-        boxMesh.receiveShadow = true;
-        world.add(boxbody);
-        scene.add(boxMesh);
-        boxes.push(boxbody);
-        boxMeshes.push(boxMesh);
+    // var size = 0.5;
+    // var he = new CANNON.Vec3(size,size,size*0.1);
+    // var boxShape = new CANNON.Box(he);
+    // var mass = 0;
+    // var space = 0.1*size;
+    // var N=5, last;
+    // var boxGeometry = new THREE.CubeGeometry(he.x*2,he.y*2,he.z*2);
+    // for(var i=0; i<N; i++){
+    //     var boxbody = new CANNON.RigidBody(mass,boxShape);
+    //     var boxMesh = new THREE.Mesh( boxGeometry, material );
+    //     boxbody.position.set(5,(N-i)*(size*2+2*space) + size*2+space,0);
+    //     boxbody.linearDamping=0.01;
+    //     boxbody.angularDamping=0.01;
+    //     boxMesh.useQuaternion = true;
+    //     boxMesh.castShadow = true;
+    //     boxMesh.receiveShadow = true;
+    //     world.add(boxbody);
+    //     scene.add(boxMesh);
+    //     boxes.push(boxbody);
+    //     boxMeshes.push(boxMesh);
 
-        if(i!=0){
-            // Connect this body to the last one
-            var c1 = new CANNON.PointToPointConstraint(boxbody,new CANNON.Vec3(-size,size+space,0),last,new CANNON.Vec3(-size,-size-space,0));
-            var c2 = new CANNON.PointToPointConstraint(boxbody,new CANNON.Vec3(size,size+space,0),last,new CANNON.Vec3(size,-size-space,0));
-            world.addConstraint(c1);
-            world.addConstraint(c2);
-        } else {
-            mass=0.3;
-        }
-        last = boxbody;
-    }
+    //     if(i!=0){
+    //         // Connect this body to the last one
+    //         var c1 = new CANNON.PointToPointConstraint(boxbody,new CANNON.Vec3(-size,size+space,0),last,new CANNON.Vec3(-size,-size-space,0));
+    //         var c2 = new CANNON.PointToPointConstraint(boxbody,new CANNON.Vec3(size,size+space,0),last,new CANNON.Vec3(size,-size-space,0));
+    //         world.addConstraint(c1);
+    //         world.addConstraint(c2);
+    //     } else {
+    //         mass=0.3;
+    //     }
+    //     last = boxbody;
+    // }
 }
 
 function onWindowResize() {
@@ -288,8 +332,8 @@ function animate() {
 
         // Update ball positions
         for(var i=0; i<balls.length; i++){
-            balls[i].position.copy(ballMeshes[i].position);
-            balls[i].quaternion.copy(ballMeshes[i].quaternion);
+            balls[i].obj.position.copy(ballMeshes[i].obj.position);
+            balls[i].obj.quaternion.copy(ballMeshes[i].obj.quaternion);
         }
 
         // Update box positions
@@ -297,7 +341,21 @@ function animate() {
             boxes[i].position.copy(boxMeshes[i].position);
             boxes[i].quaternion.copy(boxMeshes[i].quaternion);
         }
+        // Filter projectiles
+        // balls = balls.filter(function(ball) {
+        //     if(!ball.alive) {
+        //         world.remove(ball);
+        //     }
+        //     return ball.alive;
+        // });
+        // ballMeshes = ballMeshes.filter(function(mesh) {
+        //     if(!mesh.alive) {
+        //         scene.remove(mesh);
+        //     }
+        //     return mesh.alive;
+        // });
     }
+
 
     controls.update( Date.now() - time );
     renderer.render( scene, camera );
@@ -338,8 +396,22 @@ window.addEventListener("click",function(e){
         scene.add(ballMesh);
         ballMesh.castShadow = true;
         ballMesh.receiveShadow = true;
-        balls.push(ballBody);
-        ballMeshes.push(ballMesh);
+
+        ballObj = {
+            alive: true,
+            obj: ballBody
+        };
+        meshObj = {
+            alive: true,
+            obj: ballMesh
+        };
+        // window.setTimeout(function() {
+        //     ballObj.alive = false;
+        //     meshObj.alive = false;
+        // }, 3000);
+        balls.push(ballObj);
+        ballMeshes.push(meshObj);
+
         getShootDir(shootDirection);
         ballBody.velocity.set(
             shootDirection.x * shootVelo,
