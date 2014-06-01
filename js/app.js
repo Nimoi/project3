@@ -1,3 +1,22 @@
+/**
+ * Simple Platformer/Shooter
+ * WebGL with Three.js and Cannon.js
+ * DEMOS: http://schteppe.github.io/cannon.js/
+ **/
+
+ /** TODO 
+  - Delete projectiles 3s after being shot
+  - Create fence and invisible wall
+  - Create obstacle platforms
+  - Create targets
+  - Detect when targets are shot (hitscan?)
+  - Detect when player enters a certain area
+ **/
+
+/**
+ * INIT
+ **/
+
 var sphereShape,
   player, 
   world, 
@@ -22,7 +41,9 @@ var controls,
 var blocker = document.getElementById( 'blocker' );
 var instructions = document.getElementById( 'instructions' );
 
-/** POINTER LOCK **/
+/** 
+ * POINTER LOCK
+ **/
 
 var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
 

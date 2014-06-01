@@ -1,0 +1,31 @@
+body {
+  background: #fff;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden; }
+
+.info {
+  position: absolute;
+  top: 20px;
+  left: 40px; }
+  .info .title {
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0; }
+
+#instructions {
+  font-weight: bold;
+  text-align: center;
+  font-size: 32px;
+  color: #fff;
+  width: 100%;
+  position: absolute;
+  top: 20%; }
+  #instructions span {
+    padding: 20px 50px;
+    border: 1px solid #fff; }
+    #instructions span:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.3);
+      border: 4px solid #fff;
+      cursor: pointer; }
