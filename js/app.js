@@ -159,7 +159,7 @@ function init() {
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog( 0x4BB5C1, 0, 500 );
+    scene.fog = new THREE.Fog( 0x4BB5C1, 0, 200 );
 
     var ambient = new THREE.AmbientLight( 0xBD8D46 );
     scene.add( ambient );
@@ -181,11 +181,11 @@ function init() {
 
         //light.shadowCameraVisible = true;
     }
-    scene.add( light );
+    scene.add(light);
 
 
-    controls = new PointerLockControls( camera , player );
-    scene.add( controls.getObject() );
+    controls = new PointerLockControls(camera , player);
+    scene.add(controls.getObject());
 
     // floor
     geometry = new THREE.PlaneGeometry( 300, 300, 50, 50 );
@@ -194,7 +194,11 @@ function init() {
     material = new THREE.MeshLambertMaterial( { color: 0x0084ff } );
     THREE.ColorUtils.adjustHSV( material.color, 0, 0, 0.9 );
 
-    mesh = new THREE.Mesh( geometry, material );
+    // floor texture
+    var floorTexture = THREE.ImageUtils.loadTexture('img/sand1.jpg');
+    var floorMaterial = new THREE.MeshLambertMaterial({ map: floorTexture });
+
+    mesh = new THREE.Mesh( geometry, floorMaterial );
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     scene.add( mesh );
@@ -209,6 +213,11 @@ function init() {
 
     window.addEventListener( 'resize', onWindowResize, false );
 
+    // Box materials
+    var cubeTexture = THREE.ImageUtils.loadTexture('img/metal1.jpg');
+    var cubeMaterial = new THREE.MeshLambertMaterial({ map: cubeTexture });
+    // var cubeMaterial = new THREE.MeshLambertMaterial({ map: cubeTexture, color: 0x28c0ec });
+
     // Add boxes
     var halfExtents = new CANNON.Vec3(1,1,1);
     var boxShape = new CANNON.Box(halfExtents);
@@ -218,7 +227,7 @@ function init() {
         var y = 1 + (Math.random()-0.5)*1;
         var z = (Math.random()-0.5)*20;
         var boxBody = new CANNON.RigidBody(5,boxShape);
-        var boxMesh = new THREE.Mesh( boxGeometry, material );
+        var boxMesh = new THREE.Mesh( boxGeometry, cubeMaterial );
         world.add(boxBody);
         scene.add(boxMesh);
         boxBody.position.set(x,y,z);
@@ -296,11 +305,17 @@ function animate() {
 
 }
 
+// Projectile
+// ball texture
+var ballTexture = THREE.ImageUtils.loadTexture('img/metal2.jpg');
+var ballMaterial = new THREE.MeshLambertMaterial({ map: ballTexture });
+
 var ballShape = new CANNON.Sphere(0.05);
 var ballGeometry = new THREE.SphereGeometry(ballShape.radius);
 var shootDirection = new THREE.Vector3();
 var shootVelo = 20;
 var projector = new THREE.Projector();
+
 function getShootDir(targetVec){
     var vector = targetVec;
     targetVec.set(0,0,1);
@@ -311,13 +326,14 @@ function getShootDir(targetVec){
     targetVec.z = ray.direction.z;
 }
 
+
 window.addEventListener("click",function(e){ 
     if(controls.enabled==true){
         var x = player.position.x;
         var y = player.position.y;
         var z = player.position.z;
         var ballBody = new CANNON.RigidBody(1,ballShape);
-        var ballMesh = new THREE.Mesh( ballGeometry, material );
+        var ballMesh = new THREE.Mesh(ballGeometry, ballMaterial);
         world.add(ballBody);
         scene.add(ballMesh);
         ballMesh.castShadow = true;
@@ -325,9 +341,10 @@ window.addEventListener("click",function(e){
         balls.push(ballBody);
         ballMeshes.push(ballMesh);
         getShootDir(shootDirection);
-        ballBody.velocity.set(  shootDirection.x * shootVelo,
-                                shootDirection.y * shootVelo,
-                                shootDirection.z * shootVelo);
+        ballBody.velocity.set(
+            shootDirection.x * shootVelo,
+            shootDirection.y * shootVelo,
+            shootDirection.z * shootVelo);
 
         // Move the ball outside the player sphere
         x += shootDirection.x * (sphereShape.radius*1.02 + ballShape.radius);
